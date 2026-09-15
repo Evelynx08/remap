@@ -1,0 +1,331 @@
+/* BookOS Teclas — BookOS-HIG/AI-DESIGN-SYSTEM.md.
+   Las variables llevan los nombres cortos de las demás apps (--tx y no --text,
+   --blue y no --accent) porque son los que reescribe ~/.config/bookos/palette.css:
+   con los nombres de la guía el color dinámico no llegaría a esta app. */
+:root {
+  --bg: #f2f2f7; --card: #ffffff; --tx: #000000; --tx2: #8e8e93;
+  --div: rgba(0,0,0,.08); --brd: rgba(0,0,0,.10); --hov: rgba(0,0,0,.04);
+  --act: rgba(0,0,0,.08); --sbg: rgba(0,0,0,.06); --toff: #e0e0e0;
+  --blue: #007aff; --green: #34c759; --red: #ff3b30; --danger-btn: #d32f2f;
+  --orange: #ff9500; --on-accent: #ffffff; --sobre-color: #ffffff;
+  --sombra: 0 1px 3px rgba(0,0,0,.05);
+  --sombra-toast: 0 4px 20px rgba(0,0,0,.15);
+  --sombra-popover: 0 6px 22px rgba(0,0,0,.18);
+  --sombra-modal: 0 20px 56px rgba(0,0,0,.30);
+  --scrim: rgba(0,0,0,.45);
+  --curva: cubic-bezier(.4,0,.2,1);
+  --muelle: cubic-bezier(.34,1.4,.64,1);
+  --entrada: cubic-bezier(.25,.46,.45,.94);
+  --aparece: cubic-bezier(.32,1.3,.5,1);
+  touch-action: pan-x pan-y;
+  color-scheme: light;
+}
+:root.dark-mode {
+  --bg: #000000; --card: #1c1c1e; --tx: #ffffff; --tx2: #8e8e93;
+  --div: rgba(255,255,255,.08); --brd: rgba(255,255,255,.06); --hov: rgba(255,255,255,.06);
+  --act: rgba(255,255,255,.10); --sbg: rgba(255,255,255,.08); --toff: #48484a;
+  --blue: #0a84ff; --green: #30d158; --red: #ff453a; --orange: #ff9f0a;
+  --sombra: none;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(.light-mode) {
+    --bg: #000000; --card: #1c1c1e; --tx: #ffffff; --tx2: #8e8e93;
+    --div: rgba(255,255,255,.08); --brd: rgba(255,255,255,.06); --hov: rgba(255,255,255,.06);
+    --act: rgba(255,255,255,.10); --sbg: rgba(255,255,255,.08); --toff: #48484a;
+    --blue: #0a84ff; --green: #30d158; --red: #ff453a; --orange: #ff9f0a;
+    --sombra: none;
+    color-scheme: dark;
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box; margin: 0; padding: 0;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+html, body {
+  height: 100%; overflow: hidden; background: transparent;
+  touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
+}
+html { zoom: 1 !important; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Roboto, sans-serif;
+  color: var(--tx); -webkit-font-smoothing: antialiased;
+}
+input { font: inherit; -webkit-user-select: text; user-select: text; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; text-align: left; }
+
+/* ── Ventana ─────────────────────────────────────────────────────────── */
+.ventana {
+  height: 100%; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--bg); border: 1px solid var(--brd); border-radius: 20px;
+}
+.titlebar {
+  height: 36px; flex-shrink: 0; padding: 0 8px;
+  display: flex; justify-content: flex-end; align-items: center;
+}
+.tb-controles { display: flex; gap: 2px; }
+.tb-controles button {
+  width: 30px; height: 28px; border-radius: 10px; display: grid; place-items: center;
+  opacity: .6; transition: background-color 120ms var(--curva), opacity 120ms var(--curva);
+}
+.tb-controles button:hover { opacity: 1; background: var(--hov); }
+#cerrar:hover { background: var(--red); color: var(--sobre-color); }
+
+.cuerpo { flex: 1; min-height: 0; display: flex; }
+
+/* ── Lateral: lista, o las acciones de la tecla elegida ──────────────── */
+.sidebar { width: 384px; flex-shrink: 0; padding: 0 24px 32px; overflow-y: auto; scrollbar-width: none; }
+.lateral-pagina { display: flex; flex-direction: column; }
+.lateral-pagina.entra { animation: aparecer 220ms var(--entrada); }
+.titulo-app { font-size: 28px; font-weight: 700; letter-spacing: -.4px; margin: 2px 4px 18px; }
+.seccion { font-size: 12px; font-weight: 500; color: var(--tx2); margin: 0 20px 6px; }
+.tarjeta-nav {
+  width: 336px; margin-bottom: 18px; overflow: hidden;
+  background: var(--card); border-radius: 22px; box-shadow: var(--sombra);
+}
+.nav-item {
+  position: relative; width: 100%; height: 58px; padding: 0 18px;
+  display: flex; align-items: center; gap: 14px;
+  transition: background-color 120ms var(--curva);
+}
+.nav-item:hover { background: var(--hov); }
+.nav-item:active { background: var(--act); }
+.nav-item + .nav-item::before {
+  content: ""; position: absolute; top: 0; left: 62px; right: 0; height: .5px; background: var(--div);
+}
+.nav-textos { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.nav-titulo, .nav-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nav-titulo { font-size: 14px; font-weight: 500; }
+.nav-sub { font-size: 11px; color: var(--tx2); }
+.nav-item > svg:last-child { color: var(--tx2); flex-shrink: 0; }
+.nav-vacio { padding: 18px 20px; font-size: 13px; line-height: 1.4; color: var(--tx2); }
+.icono-a { width: 30px; height: 30px; flex-shrink: 0; }
+
+.cabecera { min-height: 44px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.atras {
+  width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px; display: grid; place-items: center;
+  color: var(--blue); transition: background-color 120ms var(--curva);
+}
+.atras:hover { background: var(--hov); }
+.titulo-pagina { font-size: 22px; font-weight: 700; letter-spacing: -.3px; }
+
+.fila {
+  position: relative; width: 100%; min-height: 48px; padding: 14px 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.fila + .fila::before {
+  content: ""; position: absolute; top: 0; left: 20px; right: 20px; height: .5px; background: var(--div);
+}
+.fila-textos { flex: 1; min-width: 0; }
+.fila-titulo { font-size: 14px; font-weight: 500; }
+.fila-sub { font-size: 11px; color: var(--tx2); margin-top: 2px; line-height: 1.4; }
+.fila-boton { transition: background-color 120ms var(--curva); }
+.fila-boton:hover { background: var(--hov); }
+.fila-boton:active { background: var(--act); }
+.peligro .fila-titulo, .fila-boton.peligro > svg { color: var(--red); }
+.aviso .fila-titulo { color: var(--orange); }
+
+/* Selector en flujo (HIG §4, «Popover selector»). */
+.selector {
+  width: 336px; margin-bottom: 18px; padding: 6px; border-radius: 18px;
+  background: color-mix(in srgb, var(--card) 93%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tx) 9%, transparent);
+}
+.selector-grupo { font-size: 12px; font-weight: 500; color: var(--tx2); padding: 12px 12px 4px; }
+.opcion {
+  width: 100%; padding: 10px 12px; border-radius: 13px;
+  display: flex; align-items: center; gap: 12px;
+  transition: background-color 120ms var(--curva);
+}
+.opcion:hover { background: var(--hov); }
+.opcion:active { background: var(--act); }
+.radio {
+  width: 18px; height: 18px; flex-shrink: 0; border-radius: 999px;
+  border: 2px solid var(--toff); display: grid; place-items: center;
+}
+.radio::after {
+  content: ""; width: 8px; height: 8px; border-radius: 999px; background: var(--on-accent);
+  transform: scale(0); transition: transform 250ms var(--muelle);
+}
+.opcion.activa .radio { background: var(--blue); border-color: var(--blue); }
+.opcion.activa .radio::after { transform: scale(1); }
+.opcion-texto { font-size: 14.5px; font-weight: 500; }
+.opcion.activa .opcion-texto { font-weight: 600; color: var(--blue); }
+
+.tarjeta-comando { padding: 12px; display: flex; align-items: center; gap: 10px; }
+.entrada {
+  flex: 1; min-width: 0; height: 40px; padding: 0 14px; outline: none;
+  border-radius: 14px; border: 1px solid var(--brd); background: var(--sbg); color: var(--tx);
+}
+.entrada:focus { border-color: var(--blue); }
+.boton {
+  padding: 8px 18px; border-radius: 12px; font-size: 13px; font-weight: 600;
+  transition: background-color 120ms var(--curva);
+}
+.boton.primario { background: var(--blue); color: var(--on-accent); }
+.boton.secundario { background: var(--card); box-shadow: var(--sombra); }
+.boton.secundario:hover { background: var(--hov); }
+
+/* ── Teclado ─────────────────────────────────────────────────────────── */
+.detalle { flex: 1; min-width: 0; overflow-y: auto; padding: 0 44px 32px; scrollbar-width: none; }
+.pagina { max-width: 1000px; }
+.cabecera-teclado { justify-content: space-between; }
+.tarjeta {
+  margin-bottom: 16px; overflow: hidden;
+  background: var(--card); border-radius: 25px; box-shadow: var(--sombra);
+}
+.tarjeta-teclado { padding: 20px; }
+/* Rejilla de 60 columnas, cuatro por unidad de tecla: así el Intro puede
+   ocupar dos filas, que con filas de flex no se podía. */
+.teclado {
+  display: grid; gap: 6px;
+  grid-template-columns: repeat(60, minmax(0, 1fr));
+  grid-template-rows: 34px repeat(5, 48px);
+}
+.tecla {
+  position: relative; min-width: 0; padding: 0 4px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); border: 1px solid var(--brd); color: var(--tx);
+  font-size: 12px; font-weight: 500; text-align: center;
+  transition: background-color 120ms var(--curva), transform 120ms var(--curva);
+}
+.tecla-etiqueta { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Teclas de carácter: rejilla de 2×2 con cada nivel donde va en una tecla
+   física. El piloto y el punto de «cambiada» van en absoluto y no ocupan celda. */
+.tecla.caracter {
+  display: grid; padding: 3px 7px;
+  grid-template: minmax(0, 1fr) minmax(0, 1fr) / minmax(0, 1fr) minmax(0, 1fr);
+}
+.leyenda { min-width: 0; font-size: 11px; line-height: 1; white-space: nowrap; }
+.leyenda.mayus { grid-area: 1 / 1; justify-self: start; align-self: end; padding-bottom: 2px; }
+.leyenda.normal { grid-area: 2 / 1; justify-self: start; align-self: start; padding-top: 2px; }
+.leyenda.altgr { grid-area: 2 / 2; justify-self: end; align-self: start; padding-top: 2px; color: var(--tx2); }
+.leyenda.sola { grid-area: 1 / 1 / 3 / 3; justify-self: center; align-self: center; font-size: 12px; }
+.tecla.elegida .leyenda, .tecla.pulsada .leyenda { color: inherit; }
+/* Fondos opacos: el saliente del Intro pisa el borde izquierdo de la tecla y
+   con un fondo translúcido se vería la raya por debajo. */
+button.tecla:hover { background: color-mix(in srgb, var(--tx) 6%, var(--bg)); }
+button.tecla:active { transform: scale(.95); }
+/* El Intro es un solo botón de dos filas. El saliente de arriba a la izquierda
+   es un pseudoelemento que hereda fondo y borde, así que se tiñe, se ilumina y
+   se anima con la tecla. Tiene que medir una columna más un hueco: el botón
+   ocupa 5 columnas y 4 huecos de 6px, y su caja de relleno 2px menos de borde,
+   de ahí el +13px. El alto es el de una fila de la rejilla. */
+.tecla.intro { align-items: flex-start; padding-top: 14px; border-top-left-radius: 0; }
+.tecla.intro::before {
+  content: ""; position: absolute; top: -1px; right: 100%;
+  width: calc((100% + 13px) / 5); height: 48px;
+  background: inherit; border: inherit; border-right: 0; border-radius: 10px 0 0 10px;
+}
+.tecla.cambiada {
+  color: var(--blue);
+  background: color-mix(in srgb, var(--blue) 10%, var(--card));
+  border-color: color-mix(in srgb, var(--blue) 30%, transparent);
+}
+.tecla.cambiada::after {
+  content: ""; position: absolute; top: 5px; right: 5px;
+  width: 6px; height: 6px; border-radius: 999px; background: var(--blue);
+}
+.tecla.elegida, button.tecla.elegida:hover { background: var(--blue); border-color: var(--blue); color: var(--on-accent); }
+.tecla.elegida::after { background: var(--on-accent); }
+.tecla.muerta { opacity: .4; cursor: default; }
+/* El probador: la tecla pulsada en el teclado real se pone azul mientras dura
+   la pulsación. Sin transición al entrar, para que un toque rápido se vea. */
+.tecla.pulsada, button.tecla.pulsada:hover {
+  background: var(--blue); border-color: var(--blue); color: var(--on-accent); transition: none;
+}
+.tecla.pulsada::after { background: var(--on-accent); }
+/* El piloto de Bloq Mayús, arriba a la derecha como en los teclados reales. Si
+   la tecla además está remapeada, se aparta a la izquierda del punto de
+   «cambiada» (`::after`, 6px a 5px del borde) para no taparlo. */
+.led {
+  position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 999px;
+  background: var(--toff); transition: background-color 120ms var(--curva);
+}
+.led.encendido { background: var(--green); }
+.tecla.cambiada .led { right: 15px; }
+.tecla.destello { animation: destello 260ms var(--muelle); }
+.grupo-flechas { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.grupo-flechas .tecla { flex: 1; font-size: 10px; }
+.nota { font-size: 12px; line-height: 1.5; color: var(--tx2); margin: 0 20px; }
+
+/* Filas de Preferencias: el valor actual a la derecha y su selector debajo. */
+.fila-valor { font-size: 14px; color: var(--tx2); white-space: nowrap; }
+.fila-control > svg { color: var(--tx2); flex-shrink: 0; }
+/* Las opciones son filas de la misma tarjeta, no una caja dentro de otra: con
+   borde y fondo propios se leía como una segunda tarjeta metida en la primera. */
+.selector.selector-fila {
+  position: relative; width: auto; margin: 0; padding: 4px 8px 8px;
+  background: none; border: 0; border-radius: 0;
+  transform-origin: top; animation: desplegar 180ms var(--aparece);
+}
+.selector.selector-fila::before {
+  content: ""; position: absolute; top: 0; left: 20px; right: 20px; height: .5px; background: var(--div);
+}
+
+/* ── Globo de las teclas ─────────────────────────────────────────────── */
+.globo {
+  position: fixed; left: 0; top: 0; z-index: 30; max-width: 240px; pointer-events: none;
+  padding: 10px 14px; border-radius: 14px;
+  background: color-mix(in srgb, var(--card) 96%, transparent);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  border: 1px solid color-mix(in srgb, var(--tx) 9%, transparent);
+  box-shadow: var(--sombra-popover);
+  opacity: 0; transform: translateY(4px) scale(.96); transform-origin: center bottom;
+  transition: opacity 120ms var(--curva), transform 120ms var(--curva);
+}
+.globo.abajo { transform: translateY(-4px) scale(.96); transform-origin: center top; }
+.globo.visible { opacity: 1; transform: none; transition: opacity 180ms var(--aparece), transform 180ms var(--aparece); }
+.globo-titulo { font-size: 13px; font-weight: 600; }
+.globo-accion { font-size: 12px; font-weight: 500; margin-top: 2px; }
+.globo-sub { font-size: 11px; color: var(--tx2); margin-top: 2px; line-height: 1.4; }
+
+/* ── Diálogo ─────────────────────────────────────────────────────────── */
+.capa {
+  position: fixed; inset: 0; z-index: 10; display: grid; place-items: center;
+  border-radius: 20px; background: var(--scrim);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  animation: fundido 180ms var(--curva);
+}
+.capa.saliendo { opacity: 0; transition: opacity 180ms var(--curva); }
+.dialogo {
+  width: 310px; padding: 28px 24px 20px; text-align: center;
+  background: var(--card); border-radius: 26px; box-shadow: var(--sombra-modal);
+  animation: pop 250ms var(--muelle);
+}
+.escuchando { display: grid; place-items: center; margin-bottom: 14px; }
+.escuchando .icono-a { width: 56px; height: 56px; animation: latido 1200ms var(--curva) infinite; }
+.dialogo-titulo { font-size: 17px; font-weight: 700; line-height: 1.3; }
+.dialogo-texto { font-size: 13px; line-height: 1.5; color: var(--tx2); margin: 8px 0 20px; }
+.dialogo-botones { display: flex; gap: 10px; }
+.boton-dialogo {
+  flex: 1; height: 48px; border-radius: 14px; text-align: center;
+  font-size: 15px; font-weight: 600; transition: background-color 120ms var(--curva);
+}
+.boton-dialogo.secundario { background: var(--hov); }
+.boton-dialogo.secundario:hover { background: var(--act); }
+.boton-dialogo.peligro { background: var(--danger-btn); color: var(--sobre-color); }
+
+/* ── Toast ───────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed; left: 50%; bottom: 28px; z-index: 20; pointer-events: none;
+  padding: 10px 20px; border-radius: 14px; font-size: 13px; font-weight: 500;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  box-shadow: var(--sombra-toast);
+  opacity: 0; transform: translate(-50%, 12px);
+  transition: opacity 220ms var(--entrada), transform 220ms var(--entrada);
+}
+.toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
+@keyframes aparecer { from { opacity: 0; transform: translateY(6px); } }
+@keyframes fundido { from { opacity: 0; } }
+@keyframes pop { from { opacity: 0; transform: scale(.92); } }
+@keyframes latido { 50% { opacity: .55; transform: scale(.94); } }
+@keyframes destello { from { transform: scale(.9); } }
+@keyframes desplegar { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

@@ -1,0 +1,37 @@
+[package]
+name = "bookos-teclas"
+version = "0.1.0"
+description = "BookOS Teclas"
+authors = ["BookOS"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+zbus = { version = "5", default-features = false, features = ["tokio"] }
+# `time` para el plazo de la captura de tecla; `sync` para la conexión única.
+tokio = { version = "1", features = ["sync", "time"] }
+futures-util = "0.3"
+# Lo que pone cada tecla del dibujo (normal, Mayús, AltGr), sacado de las
+# distribuciones reales del sistema. Es la misma versión que usa bookos-desktop
+# vía smithay. Sin la feature `wayland`, que solo sirve para leer keymaps desde
+# un descriptor de fichero.
+xkbcommon = { version = "0.8", default-features = false }
+
+# Para apagar el zoom por pellizco de WebKitGTK (ver main.rs). Es la misma
+# versión que ya arrastra tauri: no añade nada al árbol, solo la hace visible.
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = "0.18"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+opt-level = "z"
+panic = "abort"

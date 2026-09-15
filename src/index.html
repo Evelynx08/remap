@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+<link rel="stylesheet" href="style.css">
+<script src="bookos-palette.js"></script>
+<title>Teclas</title>
+<script src="locales.js"></script>
+<script src="i18n.js"></script>
+</head>
+<body>
+<div class="ventana">
+  <header class="titlebar" data-tauri-drag-region>
+    <div class="tb-controles">
+      <button id="minimizar">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg>
+      </button>
+      <button id="maximizar">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.25V18a2.25 2.25 0 0 0 2.25 2.25h13.5A2.25 2.25 0 0 0 21 18V8.25m-18 0V6a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 6v2.25m-18 0h18"/></svg>
+      </button>
+      <button id="cerrar">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </header>
+  <div class="cuerpo">
+    <aside class="sidebar" id="lateral"></aside>
+    <main class="detalle" id="detalle"></main>
+  </div>
+</div>
+<div class="globo" id="globo" role="tooltip"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="main.js"></script>
+</body>
+</html>

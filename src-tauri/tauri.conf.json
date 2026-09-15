@@ -1,0 +1,61 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-cli/schema.json",
+  "identifier": "com.bookos.teclas",
+  "productName": "bookos-teclas",
+  "mainBinaryName": "bookos-teclas",
+  "version": "0.1.0",
+  "build": {
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "",
+    "frontendDist": "../src"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "security": {
+      "csp": "default-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost"
+    },
+    "windows": [
+      {
+        "label": "main",
+        "title": "Teclas",
+        "width": 1240,
+        "height": 740,
+        "minWidth": 1080,
+        "minHeight": 620,
+        "decorations": false,
+        "transparent": true,
+        "resizable": true,
+        "visible": false,
+        "zoomHotkeysEnabled": false
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "icon": [
+      "icons/icon.png"
+    ],
+    "targets": [
+      "deb",
+      "rpm"
+    ],
+    "publisher": "BookOS",
+    "category": "Utility",
+    "linux": {
+      "deb": {
+        "depends": [
+          "libwebkit2gtk-4.1-0",
+          "libgtk-3-0"
+        ],
+        "desktopTemplate": "linux/desktop.hbs"
+      },
+      "rpm": {
+        "depends": [
+          "webkit2gtk4.1",
+          "gtk3"
+        ],
+        "desktopTemplate": "linux/desktop.hbs"
+      }
+    }
+  }
+}
