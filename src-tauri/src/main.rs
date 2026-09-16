@@ -56,7 +56,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             bookos_palette_css,
             leyendas::leyendas,
-            escritorio::hay_escritorio,
+            escritorio::motor_remapeo,
             escritorio::configuracion_escritorio,
             escritorio::obtener_remapeos,
             escritorio::aplicar_remapeos,

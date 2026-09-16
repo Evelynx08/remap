@@ -1,0 +1,13 @@
+post_install() {
+  systemctl daemon-reload
+  systemctl enable --now bookos-teclasd.service
+}
+
+post_upgrade() {
+  systemctl daemon-reload
+  systemctl try-restart bookos-teclasd.service
+}
+
+pre_remove() {
+  systemctl disable --now bookos-teclasd.service
+}

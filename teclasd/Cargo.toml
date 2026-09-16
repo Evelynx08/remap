@@ -1,0 +1,25 @@
+[package]
+name = "bookos-teclasd"
+version = "0.1.0"
+description = "Remapeo de teclas de BookOS para cualquier escritorio"
+authors = ["BookOS"]
+edition = "2021"
+
+[dependencies]
+# Abrir y capturar (EVIOCGRAB) los teclados físicos.
+evdev = { version = "0.13", features = ["tokio"] }
+# El teclado virtual va con ioctls a mano: el builder de uinput de evdev no
+# deja declarar LED (ver uinput.rs).
+libc = "0.2"
+zbus = { version = "5", default-features = false, features = ["tokio"] }
+# `net` para `AsyncFd`, con el que se espera a que el escritorio fije un LED.
+tokio = { version = "1", features = ["rt", "macros", "sync", "time", "net"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+opt-level = "z"
+panic = "abort"

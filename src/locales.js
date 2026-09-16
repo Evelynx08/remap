@@ -87,8 +87,9 @@ window.BOOKOS_I18N = {
     'about.fn.d': 'La gestiona el propio teclado y nunca llega al sistema, así que no se puede cambiar.',
     'about.session.t': 'Dónde funciona',
     'about.session.d': 'Los cambios los aplica el escritorio de BookOS y solo valen en su sesión.',
-    'unavailable.t': 'Escritorio no disponible',
-    'unavailable.d': 'Hace falta una sesión de BookOS con soporte de remapeo de teclas.',
+    'about.session.d.sistema': 'Fuera de BookOS los aplica el servicio bookos-teclasd para todo el equipo: Plasma, GNOME o la consola. Ahí una tecla solo puede cambiarse por otra o desactivarse.',
+    'unavailable.t': 'Remapeo no disponible',
+    'unavailable.d': 'Hace falta una sesión de BookOS o el servicio bookos-teclasd (systemctl enable --now bookos-teclasd).',
   },
   en: {
     'app.title': 'Keys',
@@ -177,7 +178,8 @@ window.BOOKOS_I18N = {
     'about.fn.d': 'The keyboard handles it itself and it never reaches the system, so it cannot be changed.',
     'about.session.t': 'Where it works',
     'about.session.d': 'The BookOS desktop applies the changes, so they only work in its session.',
-    'unavailable.t': 'Desktop not available',
-    'unavailable.d': 'A BookOS session with key remapping support is required.',
+    'about.session.d.sistema': 'Outside BookOS the bookos-teclasd service applies them system-wide: Plasma, GNOME or the console. There a key can only become another key or be disabled.',
+    'unavailable.t': 'Remapping not available',
+    'unavailable.d': 'A BookOS session or the bookos-teclasd service is required (systemctl enable --now bookos-teclasd).',
   },
 };

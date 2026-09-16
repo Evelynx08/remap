@@ -1,4 +1,5 @@
 src-tauri/target/
+teclasd/target/
 src-tauri/gen/
 *.pkg.tar.zst
 pkg/

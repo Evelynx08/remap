@@ -1,0 +1,13 @@
+[Unit]
+Description=Remapeo de teclas de BookOS
+
+[Service]
+Type=dbus
+BusName=org.bookos.Teclas
+ExecStart=/usr/bin/bookos-teclasd
+# Si muere, el kernel suelta los teclados al cerrar sus descriptores y vuelven a
+# funcionar sin remapear hasta que arranque otra vez.
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

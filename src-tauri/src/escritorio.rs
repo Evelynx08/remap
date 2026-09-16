@@ -1,6 +1,9 @@
-//! Cliente de `org.bookos.Desktop` para los remapeos de `teclas.conf`.
+//! Cliente de los remapeos de `teclas.conf`.
 //!
-//! Validar y escribir el fichero es cosa del compositor: aquí no se analiza
+//! En la sesión BookOS los aplica el compositor (`org.bookos.Desktop`, bus de
+//! sesión). En cualquier otro escritorio, `bookos-teclasd` (`org.bookos.Teclas`,
+//! bus de sistema), que habla el mismo subconjunto de métodos pero solo sabe de
+//! teclas. Validar y escribir el fichero es cosa de ellos: aquí no se analiza
 //! nada, solo se pasa el JSON de un lado a otro.
 
 use std::collections::HashMap;
@@ -8,11 +11,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 use futures_util::StreamExt;
+use tokio::sync::OnceCell;
 use zbus::zvariant::{OwnedValue, Value};
-
-const DESTINO: &str = "org.bookos.Desktop";
-const RUTA: &str = "/org/bookos/Desktop";
-const INTERFAZ: &str = "org.bookos.Desktop";
 
 /// Lo que se espera a que se pulse la tecla. Pasado el plazo se desarma la
 /// captura: armada y olvidada, el compositor se tragaría la próxima tecla que
@@ -23,23 +23,53 @@ const ESPERA_CAPTURA: Duration = Duration::from_secs(10);
 /// plazo; al vencer solo desarma si nadie ha empezado otra, o apagaría la nueva.
 static CAPTURA: AtomicU64 = AtomicU64::new(0);
 
-static CONEXION: tokio::sync::OnceCell<zbus::Connection> = tokio::sync::OnceCell::const_new();
+static SESION: OnceCell<zbus::Connection> = OnceCell::const_new();
+static SISTEMA: OnceCell<zbus::Connection> = OnceCell::const_new();
+/// Se decide una vez: la sesión no cambia de escritorio con la app abierta.
+static MOTOR: OnceCell<Option<Motor>> = OnceCell::const_new();
 
-async fn proxy() -> Result<zbus::Proxy<'static>, String> {
-    let conexion = CONEXION
-        .get_or_try_init(|| async { zbus::Connection::session().await })
-        .await
-        .map_err(|e| e.to_string())?;
-    zbus::Proxy::new(conexion, DESTINO, RUTA, INTERFAZ)
-        .await
-        .map_err(|e| e.to_string())
+#[derive(Clone, Copy)]
+enum Motor {
+    /// El compositor de BookOS.
+    Escritorio,
+    /// `bookos-teclasd`.
+    Sistema,
 }
 
-/// ¿Hay un escritorio BookOS que sepa remapear? Si no, la interfaz lo dice en
-/// vez de fallar en cada acción.
-#[tauri::command]
-pub async fn hay_escritorio() -> bool {
-    let Ok(proxy) = proxy().await else {
+async fn conectar(motor: Motor) -> zbus::Result<zbus::Proxy<'static>> {
+    let (conexion, nombre, ruta) = match motor {
+        Motor::Escritorio => (
+            SESION.get_or_try_init(zbus::Connection::session).await?,
+            "org.bookos.Desktop",
+            "/org/bookos/Desktop",
+        ),
+        Motor::Sistema => (
+            SISTEMA.get_or_try_init(zbus::Connection::system).await?,
+            "org.bookos.Teclas",
+            "/org/bookos/Teclas",
+        ),
+    };
+    zbus::Proxy::new(conexion, nombre, ruta, nombre).await
+}
+
+/// El compositor manda si está, porque es el único con las funciones de
+/// BookOS. Si `bookos-teclasd` también corre, sigue por debajo con lo suyo.
+async fn motor() -> Option<Motor> {
+    *MOTOR
+        .get_or_init(|| async {
+            if escritorio_sabe_remapear().await {
+                Some(Motor::Escritorio)
+            } else if servicio_responde().await {
+                Some(Motor::Sistema)
+            } else {
+                None
+            }
+        })
+        .await
+}
+
+async fn escritorio_sabe_remapear() -> bool {
+    let Ok(proxy) = conectar(Motor::Escritorio).await else {
         return false;
     };
     let capacidades: zbus::Result<HashMap<String, OwnedValue>> =
@@ -50,8 +80,39 @@ pub async fn hay_escritorio() -> bool {
     })
 }
 
-/// La configuración del escritorio (`GetConfig`) tal cual, en JSON. La página
-/// solo mira `teclado`, para arrancar con la distribución de la sesión.
+/// Se llama a un método en vez de mirar si el nombre está en el bus: así D-Bus
+/// arranca el servicio si está instalado pero parado.
+async fn servicio_responde() -> bool {
+    let Ok(proxy) = conectar(Motor::Sistema).await else {
+        return false;
+    };
+    proxy
+        .call::<_, _, String>("GetKeyRemaps", &())
+        .await
+        .is_ok()
+}
+
+async fn proxy() -> Result<zbus::Proxy<'static>, String> {
+    let motor = motor()
+        .await
+        .ok_or_else(|| "no hay escritorio BookOS ni bookos-teclasd".to_string())?;
+    conectar(motor).await.map_err(|e| e.to_string())
+}
+
+/// Quién aplica los remapeos: `"escritorio"`, `"sistema"` o nadie. La interfaz
+/// lo usa para avisar de que no hay y para no ofrecer lo que `bookos-teclasd`
+/// no sabe hacer.
+#[tauri::command]
+pub async fn motor_remapeo() -> Option<&'static str> {
+    motor().await.map(|motor| match motor {
+        Motor::Escritorio => "escritorio",
+        Motor::Sistema => "sistema",
+    })
+}
+
+/// La configuración del escritorio (`GetConfig`) tal cual, en JSON. Solo la
+/// tiene el compositor de BookOS. La página solo mira `teclado`, para arrancar
+/// con la distribución de la sesión.
 #[tauri::command]
 pub async fn configuracion_escritorio() -> Result<String, String> {
     proxy()

@@ -150,7 +150,7 @@ function aplicarIdioma(valor) {
 }
 
 const GRUPOS = [
-  { titulo: 'grp.mods', opciones: ['ctrl', 'shift', 'alt', 'altgr', 'meta'] },
+  { titulo: 'grp.mods', opciones: ['ctrl', 'ctrl_der', 'shift', 'alt', 'altgr', 'meta'] },
   { titulo: 'grp.keys', opciones: ['esc', 'supr', 'insert', 'inicio', 'fin', 'repag', 'avpag', 'menu', 'impr'] },
   { titulo: 'grp.media', opciones: ['reproducir', 'anterior', 'siguiente', 'silencio', 'subir_volumen', 'bajar_volumen'] },
   {
@@ -227,8 +227,10 @@ function el(tag, props = {}, ...hijos) {
 let remapeos = [];
 /** Origen elegido ('copilot', 'ctrl', 'evdev:30'…), o null si no hay ninguno. */
 let seleccion = null;
-/** `null` mientras el escritorio no ha contestado. */
+/** `null` mientras no se sabe; luego, si hay quien aplique los remapeos. */
 let disponible = null;
+/** Quién los aplica: 'escritorio' (el compositor de BookOS), 'sistema' (bookos-teclasd) o null. */
+let motor = null;
 /** Origen con «Ejecutar un comando» elegido pero aún sin guardar. */
 let comandoEnEdicion = null;
 /** Selector de Preferencias abierto ('idioma', 'distribucion') o null. */
@@ -539,7 +541,7 @@ function lateralInicio() {
     el('div', { class: 'tarjeta-nav' },
       fila(t('about.copilot.t'), t('about.copilot.d')),
       fila(t('about.fn.t'), t('about.fn.d')),
-      fila(t('about.session.t'), t('about.session.d'))));
+      fila(t('about.session.t'), t(motor === 'sistema' ? 'about.session.d.sistema' : 'about.session.d'))));
   return nodos;
 }
 
@@ -559,8 +561,12 @@ function lateralTecla(origen) {
 
   const selector = el('div', { class: 'selector', role: 'radiogroup' });
   for (const grupo of GRUPOS) {
+    // bookos-teclasd no tiene funciones de BookOS a las que llamar, y un
+    // comando suyo correría como root: fuera de BookOS, solo teclas y «nada».
+    const opciones = grupo.opciones.filter(o => motor !== 'sistema' || ['tecla', 'nada'].includes(categoria(o)));
+    if (opciones.length === 0) continue;
     selector.append(el('div', { class: 'selector-grupo' }, t(grupo.titulo)));
-    for (const opcion of grupo.opciones) {
+    for (const opcion of opciones) {
       const activa = opcion === 'cmd:' ? enComando : (!enComando && opcion === actual);
       selector.append(el('button', {
         class: 'opcion' + (activa ? ' activa' : ''), role: 'radio', 'aria-checked': String(activa),
@@ -796,11 +802,13 @@ async function iniciar() {
   // El teclado se pinta ya, sin esperar a D-Bus: si el bus tarda o falla, la
   // ventana no se queda en blanco.
   pintar();
-  disponible = await invoke('hay_escritorio');
+  motor = await invoke('motor_remapeo');
+  disponible = motor !== null;
   if (disponible) {
     try {
       remapeos = JSON.parse(await invoke('obtener_remapeos'));
-      if (!(distribucionGuardada in DISTRIBUCIONES)) {
+      // Solo el compositor de BookOS sabe qué distribución usa la sesión.
+      if (!(distribucionGuardada in DISTRIBUCIONES) && motor === 'escritorio') {
         const delSistema = distribucionDeXkb(JSON.parse(await invoke('configuracion_escritorio')).teclado);
         if (delSistema) aplicarDistribucion(delSistema);
       }

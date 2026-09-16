@@ -1,0 +1,7 @@
+# El teclado virtual de bookos-teclasd sustituye al del portátil. Sin esto
+# libinput lo toma por externo y deja de desactivar el touchpad mientras se
+# escribe.
+[BookOS Teclas]
+MatchUdevType=keyboard
+MatchName=BookOS Teclas
+AttrKeyboardIntegration=internal
